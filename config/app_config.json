@@ -1,0 +1,11 @@
+{
+  "network": {
+    "internet_check_url": "http://www.msftconnecttest.com/connecttest.txt",
+    "dns_test_hostname": "www.msftconnecttest.com",
+    "ping_count": 4,
+    "timeout_seconds": 10
+  },
+  "storage": {
+    "space_warning_percent": 90
+  }
+}

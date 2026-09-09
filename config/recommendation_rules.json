@@ -1,0 +1,117 @@
+{
+  "rules": [
+    {
+      "id": "battery_poor",
+      "module": "Battery",
+      "status": ["FAIL"],
+      "detail_match": {"health_band": "Poor"},
+      "likely_cause": "Battery cell degradation",
+      "recommended_action": "Replace battery pack",
+      "confidence": "High"
+    },
+    {
+      "id": "battery_warning",
+      "module": "Battery",
+      "status": ["WARNING"],
+      "likely_cause": "Battery wear approaching replacement threshold",
+      "recommended_action": "Plan battery replacement; confirm with another charge cycle",
+      "confidence": "Medium"
+    },
+    {
+      "id": "storage_smart_predict",
+      "module": "Storage",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"smart_predict_failure": "true"},
+      "likely_cause": "Drive nearing failure",
+      "recommended_action": "Back up data immediately; plan drive replacement",
+      "confidence": "High"
+    },
+    {
+      "id": "storage_realloc",
+      "module": "Storage",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"smart_realloc_or_pending": "true"},
+      "likely_cause": "Drive nearing failure",
+      "recommended_action": "Back up data immediately; plan drive replacement",
+      "confidence": "High"
+    },
+    {
+      "id": "storage_smart_unavailable",
+      "module": "Storage",
+      "status": ["UNKNOWN", "WARNING"],
+      "detail_match": {"smart_available": "false"},
+      "likely_cause": "Drive/controller issue (unconfirmed)",
+      "recommended_action": "Run vendor diagnostic tool; verify SMART manually",
+      "confidence": "Low"
+    },
+    {
+      "id": "memory_errors",
+      "module": "Memory",
+      "status": ["FAIL"],
+      "likely_cause": "Faulty RAM module",
+      "recommended_action": "Test slots individually; replace the module that reproduces errors",
+      "confidence": "High"
+    },
+    {
+      "id": "network_gateway_and_dns_fail",
+      "module": "Network",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"gateway_ok": "false", "dns_ok": "false"},
+      "likely_cause": "Adapter/driver or cable fault",
+      "recommended_action": "Check cable/adapter, reinstall NIC driver",
+      "confidence": "Medium"
+    },
+    {
+      "id": "network_dns_only",
+      "module": "Network",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"gateway_ok": "true", "dns_ok": "false"},
+      "likely_cause": "Local network/DNS config issue",
+      "recommended_action": "Check DNS settings, try alternate DNS server",
+      "confidence": "Medium"
+    },
+    {
+      "id": "network_internet_only",
+      "module": "Network",
+      "status": ["WARNING"],
+      "detail_match": {"gateway_ok": "true", "dns_ok": "true", "internet_ok": "false"},
+      "likely_cause": "Upstream connectivity, firewall, or proxy filtering",
+      "recommended_action": "Verify the configured internet check URL and local firewall rules",
+      "confidence": "Low"
+    },
+    {
+      "id": "keyboard_faulty_key",
+      "module": "Keyboard",
+      "status": ["FAIL", "WARNING"],
+      "likely_cause": "Faulty key switch or membrane",
+      "recommended_action": "Test with external keyboard to isolate; replace keyboard/key if isolated",
+      "confidence": "Medium"
+    },
+    {
+      "id": "display_dead_pixel",
+      "module": "Display",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"dead_or_stuck_pixel": "true"},
+      "likely_cause": "Panel defect",
+      "recommended_action": "Replace display panel if within warranty terms, else note for repair",
+      "confidence": "High"
+    },
+    {
+      "id": "display_backlight",
+      "module": "Display",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"backlight_issue": "true"},
+      "likely_cause": "Backlight or inverter/LED driver issue",
+      "recommended_action": "Inspect brightness uniformity; check panel cable and lid hinge strain",
+      "confidence": "Medium"
+    },
+    {
+      "id": "mouse_issue",
+      "module": "Mouse",
+      "status": ["FAIL", "WARNING"],
+      "likely_cause": "Button, scroll wheel, or tracking hardware fault",
+      "recommended_action": "Retest with a known-good mouse to isolate built-in vs external device",
+      "confidence": "Medium"
+    }
+  ]
+}

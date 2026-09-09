@@ -1,0 +1,245 @@
+/* GIT TechBench — Phase 1 dark theme */
+
+QWidget {
+    background-color: #0b1016;
+    color: #e8eef5;
+    font-family: "Segoe UI";
+    font-size: 13px;
+}
+
+QMainWindow {
+    background-color: #0b1016;
+}
+
+QToolTip {
+    background-color: #1b2533;
+    color: #e8eef5;
+    border: 1px solid #334155;
+    padding: 6px 8px;
+}
+
+QScrollArea {
+    border: none;
+    background: transparent;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #334155;
+    border-radius: 5px;
+    min-height: 32px;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0;
+}
+
+QScrollBar:horizontal {
+    height: 0;
+}
+
+QLineEdit {
+    background-color: #151c27;
+    border: 1px solid #2a3648;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e8eef5;
+    selection-background-color: #1d4ed8;
+}
+
+QLineEdit:focus {
+    border: 1px solid #3d9cf0;
+}
+
+QPushButton {
+    background-color: #1d4ed8;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 600;
+}
+
+QPushButton:hover {
+    background-color: #2563eb;
+}
+
+QPushButton:pressed {
+    background-color: #1e40af;
+}
+
+QPushButton:disabled {
+    background-color: #243044;
+    color: #6b7c90;
+}
+
+QPushButton#secondaryButton {
+    background-color: #1b2533;
+    border: 1px solid #334155;
+    color: #e8eef5;
+}
+
+QPushButton#secondaryButton:hover {
+    background-color: #243044;
+}
+
+QPushButton#ghostButton {
+    background-color: transparent;
+    border: 1px solid #334155;
+    color: #c5d0dc;
+}
+
+QPushButton#ghostButton:hover {
+    background-color: #151c27;
+}
+
+QProgressBar {
+    background-color: #151c27;
+    border: 1px solid #2a3648;
+    border-radius: 6px;
+    height: 10px;
+    text-align: center;
+    color: transparent;
+}
+
+QProgressBar::chunk {
+    background-color: #3d9cf0;
+    border-radius: 5px;
+}
+
+QFrame#card,
+QFrame#infoCard,
+QFrame#computerCard {
+    background-color: #151c27;
+    border: 1px solid #243041;
+    border-radius: 12px;
+}
+
+QFrame#sidebar {
+    background-color: #0e1520;
+    border-right: 1px solid #1c2736;
+}
+
+QLabel#muted {
+    color: #8b9bb0;
+}
+
+QLabel#title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f3f6fa;
+}
+
+QLabel#subtitle {
+    color: #8b9bb0;
+    font-size: 13px;
+}
+
+QLabel#sectionTitle {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #8b9bb0;
+}
+
+QLabel#fieldLabel {
+    color: #8b9bb0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+}
+
+QLabel#fieldValue {
+    color: #f3f6fa;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QLabel#cardTitle {
+    color: #8b9bb0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+}
+
+QLabel#cardSpec {
+    color: #e8eef5;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+QListWidget {
+    background: transparent;
+    border: none;
+    outline: none;
+}
+
+QStatusBar {
+    background-color: #0e1520;
+    color: #8b9bb0;
+    border-top: 1px solid #1c2736;
+}
+
+QComboBox, QPlainTextEdit, QTextEdit {
+    background-color: #151c27;
+    border: 1px solid #2a3648;
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: #e8eef5;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
+
+QCheckBox {
+    spacing: 8px;
+    color: #e8eef5;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    background: #151c27;
+}
+
+QCheckBox::indicator:checked {
+    background: #1d4ed8;
+    border-color: #3d9cf0;
+}
+
+QTableWidget {
+    background-color: #151c27;
+    border: 1px solid #243041;
+    border-radius: 8px;
+    gridline-color: #243041;
+    color: #e8eef5;
+}
+
+QHeaderView::section {
+    background-color: #1b2533;
+    color: #8b9bb0;
+    border: none;
+    padding: 8px;
+    font-weight: 700;
+}
+
+QFrame#keyCap {
+    border: 1px solid #334155;
+    border-radius: 6px;
+    background: #1b2533;
+}
+
+QFrame#clickPad, QFrame#movePad {
+    background-color: #151c27;
+    border: 1px solid #243041;
+    border-radius: 12px;
+}
