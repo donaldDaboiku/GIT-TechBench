@@ -103,8 +103,7 @@ class DashboardPage(QWidget):
         hw_title.setObjectName("sectionTitle")
         layout.addWidget(hw_title)
         hw_note = QLabel(
-            "CPU and GPU stay UNKNOWN until Phase 3. Battery, storage, memory, and "
-            "network status update when those diagnostics run."
+            "CPU, GPU, battery, storage, memory, and network status update when those diagnostics run."
         )
         hw_note.setObjectName("muted")
         hw_note.setWordWrap(True)
@@ -134,8 +133,8 @@ class DashboardPage(QWidget):
         self.run_btn = QPushButton("Run full diagnostic")
         self.run_btn.setMinimumHeight(44)
         self.run_btn.setToolTip(
-            "Runs battery, storage, memory inventory, and network tests. "
-            "Keyboard, mouse, and display are interactive and stay UNKNOWN until you use those pages."
+            "Runs battery, storage, memory, CPU, GPU, and network tests. "
+            "Keyboard, mouse, display, audio, and camera stay UNKNOWN until you use those pages."
         )
         self.run_btn.clicked.connect(self.full_diagnostic_requested.emit)
         layout.addWidget(self.run_btn)
@@ -225,7 +224,7 @@ class DashboardPage(QWidget):
 
         if info.gpus:
             gpu = info.gpus[0]
-            extra_gpu = f"{len(info.gpus)} adapter(s)" if len(info.gpus) > 1 else "Usage not sampled in Phase 1"
+            extra_gpu = f"{len(info.gpus)} adapter(s)" if len(info.gpus) > 1 else "Run GPU Info for driver, memory, and usage."
             self.gpu_card.update_card(gpu.name.display(), extra_gpu, Status.UNKNOWN)
         else:
             self.gpu_card.update_card("Unavailable", "No video controller reported.", Status.UNKNOWN)
@@ -261,8 +260,10 @@ class DashboardPage(QWidget):
 
     def apply_results(self, results: dict[str, DiagnosticResult]) -> None:
         mapping = {
+            "CPU": self.cpu_card,
             "Memory": self.ram_card,
             "Storage": self.storage_card,
+            "GPU": self.gpu_card,
             "Battery": self.battery_card,
             "Network": self.network_card,
         }

@@ -45,6 +45,67 @@ class CallableWorker(QThread):
             self.failed.emit(str(exc))
 
 
+class CommandWorker(QThread):
+    """Stream an approved Windows command without blocking the UI."""
+
+    line = Signal(str)
+    finished_code = Signal(int)
+
+    def __init__(self, args: list[str], parent=None) -> None:
+        super().__init__(parent)
+        self.args = args
+
+    def run(self) -> None:
+        import os
+        import subprocess
+
+        from app.core.windows_commands import CREATE_NO_WINDOW
+
+        try:
+            proc = subprocess.Popen(
+                self.args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="oem",
+                errors="replace",
+                creationflags=CREATE_NO_WINDOW if os.name == "nt" else 0,
+            )
+        except OSError as exc:
+            self.line.emit(str(exc))
+            self.finished_code.emit(1)
+            return
+        assert proc.stdout is not None
+        for raw in proc.stdout:
+            self.line.emit(raw.rstrip("\r\n"))
+        self.finished_code.emit(int(proc.wait()))
+
+
+class MicWorker(QThread):
+    """Sample microphone RMS off the UI thread."""
+
+    level = Signal(float)
+    failed = Signal(str)
+
+    def __init__(self, device_index: int = 0, parent=None) -> None:
+        super().__init__(parent)
+        self.device_index = device_index
+        self._running = True
+
+    def stop(self) -> None:
+        self._running = False
+
+    def run(self) -> None:
+        from app.modules.audio.audio_tester import sample_mic_rms
+
+        while self._running:
+            value = sample_mic_rms(self.device_index)
+            if value is None:
+                self.failed.emit("Could not open this recording device.")
+                return
+            self.level.emit(value)
+
+
 class FullDiagnosticWorker(QThread):
     progress = Signal(str)
     module_done = Signal(object)

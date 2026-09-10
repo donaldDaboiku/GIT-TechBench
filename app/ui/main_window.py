@@ -15,9 +15,13 @@ from app.models.diagnostic_result import DiagnosticResult
 from app.ui.components.sidebar import Sidebar
 from app.ui.dashboard import DashboardPage
 from app.ui.nav import NAV_ITEMS
+from app.ui.pages.audio_page import AudioPage
 from app.ui.pages.battery_page import BatteryPage
+from app.ui.pages.camera_page import CameraPage
+from app.ui.pages.cpu_page import CpuPage
 from app.ui.pages.display_page import DisplayPage
 from app.ui.pages.full_diagnostic_page import FullDiagnosticPage
+from app.ui.pages.gpu_page import GpuPage
 from app.ui.pages.hardware_info_page import HardwareInfoPage
 from app.ui.pages.keyboard_page import KeyboardPage
 from app.ui.pages.memory_page import MemoryPage
@@ -26,6 +30,7 @@ from app.ui.pages.network_page import NetworkPage
 from app.ui.pages.placeholder_page import PlaceholderPage
 from app.ui.pages.settings_page import SettingsPage
 from app.ui.pages.storage_page import StoragePage
+from app.ui.pages.windows_health_page import WindowsHealthPage
 from app.ui.workers import FullDiagnosticWorker, SystemInfoWorker
 
 logger = logging.getLogger("techbench.ui")
@@ -69,6 +74,11 @@ class MainWindow(QMainWindow):
         self.storage_page = StoragePage()
         self.memory_page = MemoryPage()
         self.network_page = NetworkPage()
+        self.cpu_page = CpuPage()
+        self.gpu_page = GpuPage()
+        self.audio_page = AudioPage()
+        self.camera_page = CameraPage()
+        self.windows_page = WindowsHealthPage()
 
         self._register("dashboard", self.dashboard)
         self._register("full_diagnostic", self.full_page)
@@ -80,6 +90,11 @@ class MainWindow(QMainWindow):
         self._register("storage", self.storage_page)
         self._register("memory", self.memory_page)
         self._register("network", self.network_page)
+        self._register("cpu", self.cpu_page)
+        self._register("gpu", self.gpu_page)
+        self._register("audio", self.audio_page)
+        self._register("camera", self.camera_page)
+        self._register("windows", self.windows_page)
         self._register("settings", self.settings_page)
         for item in NAV_ITEMS:
             if item.id in self.pages:
@@ -94,6 +109,11 @@ class MainWindow(QMainWindow):
             self.storage_page,
             self.memory_page,
             self.network_page,
+            self.cpu_page,
+            self.gpu_page,
+            self.audio_page,
+            self.camera_page,
+            self.windows_page,
         ):
             page.result_ready.connect(self._on_module_result)
 
@@ -101,7 +121,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
         status = QStatusBar()
-        status.showMessage(f"{APP_NAME} v{__version__}  ·  Phase 2 Core Diagnostics")
+        status.showMessage(f"{APP_NAME} v{__version__}  ·  Phase 3 Advanced Tools")
         self.setStatusBar(status)
 
         self.sidebar.set_active("dashboard")
@@ -178,7 +198,7 @@ class MainWindow(QMainWindow):
         interactive = {
             name: result
             for name, result in self._results.items()
-            if name in {"Keyboard", "Mouse", "Display"}
+            if name in {"Keyboard", "Mouse", "Display", "Audio", "Camera", "Windows"}
         }
         merged = engine.merge_session(list(results), interactive)
         for item in merged:

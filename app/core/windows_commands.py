@@ -1,19 +1,16 @@
-"""Approved Windows diagnostic command catalog.
-
-Phase 3 implements execution. This module only lists commands and
-checks elevation — it never runs DISM, SFC, or chkdsk by itself.
-"""
+"""Approved Windows diagnostic command catalog and launchers."""
 
 from __future__ import annotations
 
 import ctypes
 import logging
+import os
 import sys
 
 logger = logging.getLogger("techbench.windows_commands")
 
-# Keys are stable IDs used by the UI. Values are display metadata only.
-# Destructive or long-running commands must always require explicit confirmation.
+CREATE_NO_WINDOW = 0x08000000
+
 APPROVED_COMMANDS: dict[str, dict[str, str]] = {
     "sfc_scan": {
         "label": "System File Checker",
@@ -43,7 +40,6 @@ APPROVED_COMMANDS: dict[str, dict[str, str]] = {
 
 
 def is_elevated() -> bool:
-    """Return True when the process has an elevated administrator token."""
     if sys.platform != "win32":
         return False
     try:
@@ -51,3 +47,15 @@ def is_elevated() -> bool:
     except Exception:
         logger.exception("Could not determine administrator rights")
         return False
+
+
+def open_windows_update() -> None:
+    os.startfile("ms-settings:windowsupdate")  # noqa: S606
+
+
+def open_event_viewer() -> None:
+    os.startfile("eventvwr.msc")  # noqa: S606
+
+
+def open_windows_camera() -> None:
+    os.startfile("microsoft.windows.camera:")  # noqa: S606

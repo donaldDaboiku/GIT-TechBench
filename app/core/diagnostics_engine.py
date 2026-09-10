@@ -1,4 +1,4 @@
-"""Central diagnostic runner for automated Phase 2 checks."""
+"""Central diagnostic runner for automated checks."""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ from app.core.health_checker import overall_status
 from app.core.recommendation_engine import RecommendationEngine
 from app.models.diagnostic_result import DiagnosticResult, Status
 from app.modules.battery.battery_checker import BatteryChecker
+from app.modules.cpu.cpu_monitor import CpuMonitor
+from app.modules.gpu.gpu_monitor import GpuMonitor
 from app.modules.memory.ram_checker import RamChecker
 from app.modules.network.network_tester import NetworkTester
 from app.modules.storage.disk_checker import DiskChecker
@@ -16,8 +18,8 @@ from app.modules.storage.disk_checker import DiskChecker
 ProgressFn = Callable[[str], None]
 ResultFn = Callable[[DiagnosticResult], None]
 
-AUTOMATED_MODULES = ("Battery", "Storage", "Memory", "Network")
-INTERACTIVE_MODULES = ("Keyboard", "Mouse", "Display")
+AUTOMATED_MODULES = ("Battery", "Storage", "Memory", "CPU", "GPU", "Network")
+INTERACTIVE_MODULES = ("Keyboard", "Mouse", "Display", "Audio", "Camera", "Windows")
 
 
 class DiagnosticsEngine:
@@ -59,6 +61,16 @@ class DiagnosticsEngine:
             progress("Memory inventory…")
         _m, memory = RamChecker().check()
         emit("Memory", memory)
+
+        if progress:
+            progress("CPU snapshot…")
+        _c, cpu = CpuMonitor().snapshot(0.8)
+        emit("CPU", cpu)
+
+        if progress:
+            progress("GPU inventory…")
+        _g, gpu = GpuMonitor().snapshot()
+        emit("GPU", gpu)
 
         if progress:
             progress("Network tests…")

@@ -112,6 +112,49 @@
       "likely_cause": "Button, scroll wheel, or tracking hardware fault",
       "recommended_action": "Retest with a known-good mouse to isolate built-in vs external device",
       "confidence": "Medium"
+    },
+    {
+      "id": "cpu_hot_throttle",
+      "module": "CPU",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"high_temp": "true", "throttling": "true"},
+      "likely_cause": "Cooling failure (dust, dry thermal paste, fan)",
+      "recommended_action": "Clean/reseat cooler, reapply thermal paste, check fan RPM",
+      "confidence": "Medium"
+    },
+    {
+      "id": "cpu_hot",
+      "module": "CPU",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"high_temp": "true"},
+      "likely_cause": "High CPU temperature under the current load",
+      "recommended_action": "Check airflow, fan spin, and thermal paste; retest after cooldown",
+      "confidence": "Medium"
+    },
+    {
+      "id": "cpu_throttle",
+      "module": "CPU",
+      "status": ["WARNING"],
+      "detail_match": {"throttling": "true"},
+      "likely_cause": "Frequency dropped under load (power limit or thermal, unconfirmed)",
+      "recommended_action": "Check power plan, charger, and cooling; confirm with a vendor stress tool",
+      "confidence": "Low"
+    },
+    {
+      "id": "audio_issue",
+      "module": "Audio",
+      "status": ["FAIL", "WARNING"],
+      "likely_cause": "Speaker, jack, or microphone hardware/driver fault",
+      "recommended_action": "Retest with headphones and an external mic to isolate the device",
+      "confidence": "Medium"
+    },
+    {
+      "id": "camera_issue",
+      "module": "Camera",
+      "status": ["FAIL", "WARNING"],
+      "likely_cause": "Camera module, cable, or privacy-shutter/driver issue",
+      "recommended_action": "Check the privacy shutter, Device Manager camera status, and vendor driver",
+      "confidence": "Medium"
     }
   ]
 }

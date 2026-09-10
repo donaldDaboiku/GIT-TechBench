@@ -2,14 +2,15 @@
 
 Professional PC Diagnostics & IT Support Toolkit for Windows 10/11.
 
-Phase 2 adds core diagnostics: keyboard, mouse, display, battery health, storage/SMART, memory inventory, network tests, a full-diagnostic runner, and a JSON rule-based recommendation engine.
+Phase 3 adds CPU monitoring, GPU inventory, speaker/mic tests, camera preview/capture, and Windows Health (SFC, DISM CheckHealth, read-only chkdsk) with confirmation and live output.
 
 ## Requirements
 
 - Windows 10 or 11
 - Python 3.12 or newer
 - `PySide6-Essentials`, `psutil`, `pywin32`, `WMI`
-- Administrator rights are **not** required for inventory. SMART and some WMI battery classes may be richer when elevated. Windows Memory Diagnostic prompts for elevation.
+- Optional: `opencv-python-headless` for in-app camera preview and still capture
+- Administrator rights are **not** required for inventory. SFC, DISM, and Check Disk require elevation and confirmation.
 
 ## Install
 
