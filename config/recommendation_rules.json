@@ -36,12 +36,21 @@
       "confidence": "High"
     },
     {
+      "id": "storage_smart_needs_admin",
+      "module": "Storage",
+      "status": ["UNKNOWN", "WARNING"],
+      "detail_match": {"smart_needs_admin": "true"},
+      "likely_cause": "SMART pass-through blocked without elevation (unconfirmed)",
+      "recommended_action": "Run TechBench as administrator and scan storage again",
+      "confidence": "Low"
+    },
+    {
       "id": "storage_smart_unavailable",
       "module": "Storage",
       "status": ["UNKNOWN", "WARNING"],
       "detail_match": {"smart_available": "false"},
-      "likely_cause": "Drive/controller issue (unconfirmed)",
-      "recommended_action": "Run vendor diagnostic tool; verify SMART manually",
+      "likely_cause": "Windows did not expose SMART (unconfirmed)",
+      "recommended_action": "Run as administrator; if still empty, use the drive vendor tool",
       "confidence": "Low"
     },
     {

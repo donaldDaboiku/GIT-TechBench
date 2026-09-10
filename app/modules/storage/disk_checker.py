@@ -16,6 +16,7 @@ from app.core.config import load_app_config
 from app.core.system_info import DataOrigin, FieldValue, VolumeInfo, format_bytes
 from app.core.wmi_session import WmiSession
 from app.models.diagnostic_result import DiagnosticResult, Status
+from app.modules.storage.smart_ioctl import parse_ata_smart, read_physical_drive
 
 logger = logging.getLogger("techbench.storage")
 
@@ -39,6 +40,10 @@ class DriveReport:
     realloc_or_pending: bool
     temperature_c: str
     volumes: list[str] = field(default_factory=list)
+    wear: str = "Unavailable"
+    spare: str = "Unavailable"
+    power_on_hours: str = "Unavailable"
+    needs_admin: bool = False
 
 
 @dataclass
@@ -77,34 +82,53 @@ def overall_from_signals(
     realloc: bool,
     space_warning: bool,
     windows_unhealthy: bool,
+    needs_admin: bool = False,
 ) -> tuple[Status, str]:
     """SMART missing never becomes PASS."""
     if predict_failure or realloc or windows_unhealthy:
         return Status.FAIL, "Storage reported a failure or predictive-failure signal."
     if not smart_available:
+        admin_note = (
+            "SMART/temperature need administrator rights"
+            if needs_admin
+            else "SMART information unavailable"
+        )
         if space_warning:
             return (
                 Status.WARNING,
-                "Low disk space. SMART information unavailable — health is not assumed.",
+                f"Low disk space. {admin_note} — health is not assumed.",
             )
-        return Status.UNKNOWN, "SMART information unavailable. Drive health is not assumed."
+        return Status.UNKNOWN, f"{admin_note}. Drive health is not assumed."
     if space_warning:
         return Status.WARNING, "SMART predictive failure is not set; one or more volumes are low on space."
     return Status.PASS, "No critical SMART or Windows disk-health issues detected."
 
 
 def _details(report: StorageReport) -> dict[str, str]:
-    any_smart = any(d.smart_available for d in report.drives)
-    predict = any(d.smart_predict_failure is True for d in report.drives)
-    realloc = any(d.realloc_or_pending for d in report.drives)
+    targets = _health_drives(report.drives)
+    any_smart = any(d.smart_available for d in targets)
+    predict = any(d.smart_predict_failure is True for d in targets)
+    realloc = any(d.realloc_or_pending for d in targets)
     kinds = ",".join(d.kind for d in report.drives)
+    needs_admin = (not any_smart) and any(d.needs_admin for d in targets)
     return {
         "smart_available": "true" if any_smart else "false",
         "smart_predict_failure": "true" if predict else "false",
         "smart_realloc_or_pending": "true" if realloc else "false",
         "space_warning": "true" if report.space_warning else "false",
         "drive_kinds": kinds,
+        "smart_needs_admin": "true" if needs_admin else "false",
     }
+
+
+def _is_usb_drive(bus: str, interface: str) -> bool:
+    return "USB" in (bus or "").upper() or (interface or "").upper() == "USB"
+
+
+def _health_drives(drives: list[DriveReport]) -> list[DriveReport]:
+    """USB flash sticks without SMART must not hide an internal disk's result."""
+    internal = [d for d in drives if not _is_usb_drive(d.bus, d.interface)]
+    return internal or drives
 
 
 def _clean(value: object) -> str:
@@ -198,35 +222,18 @@ def _smart_predict(session: WmiSession) -> list[dict[str, Any]]:
     return rows
 
 
-def _parse_smart_vendor(raw: Any) -> dict[str, Any]:
-    result: dict[str, Any] = {"realloc": False, "temp": None}
-    if raw is None:
-        return result
-    try:
-        data = bytes(raw)
-    except Exception:
-        return result
-    if len(data) < 362:
-        return result
-    for i in range(30):
-        base = 2 + i * 12
-        attr_id = data[base]
-        if attr_id == 0:
-            continue
-        raw_val = int.from_bytes(data[base + 5 : base + 11], "little")
-        if attr_id in {5, 196, 197} and raw_val > 0:
-            result["realloc"] = True
-        if attr_id in {190, 194} and result["temp"] is None:
-            temp = data[base + 5]
-            if 1 <= temp <= 125:
-                result["temp"] = temp
-    return result
-
-
 def _smart_attributes(session: WmiSession) -> list[dict[str, Any]]:
     rows = []
     for item in session.query_wmi("MSStorageDriver_FailurePredictData"):
-        parsed = _parse_smart_vendor(getattr(item, "VendorSpecific", None))
+        raw = getattr(item, "VendorSpecific", None)
+        parsed: dict[str, Any] = {"realloc": False, "temp": None}
+        if raw is not None:
+            try:
+                reading = parse_ata_smart(bytes(raw))
+                parsed["realloc"] = reading.realloc_or_pending
+                parsed["temp"] = reading.temperature_c
+            except Exception:
+                logger.debug("WMI SMART vendor blob not parsed", exc_info=True)
         parsed["instance"] = _clean(getattr(item, "InstanceName", None))
         rows.append(parsed)
     return rows
@@ -354,13 +361,46 @@ def _collect(session: WmiSession) -> StorageReport:
                 smart_note = "SMART predictive failure is set"
             elif predict is False:
                 smart_note = "SMART predictive failure is not set"
+        ps_bus = str(ps.get("bus") or "") if ps else ""
+        interface = _clean(getattr(row, "InterfaceType", None)) or "Unavailable"
+        index = _as_int(getattr(row, "Index", None))
+        ioctl = None
+        if _is_usb_drive(ps_bus, interface):
+            if not smart_ok:
+                smart_note = "USB devices typically do not expose SMART"
+        elif index is not None:
+            ioctl = read_physical_drive(index)
+        wear = "Unavailable"
+        spare = "Unavailable"
+        hours = "Unavailable"
+        needs_admin = False
+        if ioctl is not None:
+            if ioctl.available:
+                smart_ok = True
+                if ioctl.predict_failure is True:
+                    predict = True
+                elif predict is None:
+                    predict = ioctl.predict_failure
+                realloc = realloc or ioctl.realloc_or_pending
+                smart_note = ioctl.note
+            elif ioctl.needs_admin and not smart_ok:
+                needs_admin = True
+                smart_note = ioctl.note
+            elif not smart_ok and ioctl.note != "SMART information unavailable":
+                smart_note = ioctl.note
+            if ioctl.temperature_c is not None:
+                src = ioctl.source or "measured SMART"
+                temp = f"{ioctl.temperature_c} C ({src})"
+            wear = ioctl.wear
+            spare = ioctl.spare
+            hours = ioctl.power_on_hours
         if ps:
             temp_ps = _scalar(ps.get("temperature"))
             wear_ps = _scalar(ps.get("wear"))
             if temp_ps is not None and temp.startswith("Unavail"):
                 temp = f"{temp_ps} C (Windows reliability counter)"
-            if wear_ps is not None:
-                smart_note += f"; NVMe wear {wear_ps}"
+            if wear_ps is not None and wear.startswith("Unavail"):
+                wear = f"{wear_ps}% (Windows reliability counter)"
         windows_health = _clean(getattr(row, "Status", None)) or "Unavailable"
         if ps and ps.get("health"):
             windows_health = str(ps["health"])
@@ -374,7 +414,7 @@ def _collect(session: WmiSession) -> StorageReport:
                 kind=kind,
                 bus=ps_bus or "Unavailable",
                 media=ps_media or _clean(getattr(row, "MediaType", None)) or "Unavailable",
-                interface=_clean(getattr(row, "InterfaceType", None)) or "Unavailable",
+                interface=interface,
                 size_bytes=_as_int(getattr(row, "Size", None)),
                 windows_health=windows_health,
                 smart_available=smart_ok,
@@ -382,6 +422,10 @@ def _collect(session: WmiSession) -> StorageReport:
                 smart_note=smart_note,
                 realloc_or_pending=realloc,
                 temperature_c=temp,
+                wear=wear,
+                spare=spare,
+                power_on_hours=hours,
+                needs_admin=needs_admin,
             )
         )
 
@@ -416,10 +460,12 @@ def _collect(session: WmiSession) -> StorageReport:
     if drives and vol_labels:
         drives[0].volumes = vol_labels
 
-    predict_fail = any(d.smart_predict_failure is True for d in drives)
-    realloc = any(d.realloc_or_pending for d in drives)
-    smart_any = any(d.smart_available for d in drives)
-    win_bad = any(d.windows_health.lower() in {"unhealthy", "pred fail", "error"} for d in drives)
+    targets = _health_drives(drives)
+    predict_fail = any(d.smart_predict_failure is True for d in targets)
+    realloc = any(d.realloc_or_pending for d in targets)
+    smart_any = any(d.smart_available for d in targets)
+    win_bad = any(d.windows_health.lower() in {"unhealthy", "pred fail", "error"} for d in targets)
+    needs_admin = (not smart_any) and any(d.needs_admin for d in targets)
 
     if not drives:
         status, message = Status.UNKNOWN, "No physical disks enumerated."
@@ -432,8 +478,9 @@ def _collect(session: WmiSession) -> StorageReport:
             realloc=realloc,
             space_warning=space_warning,
             windows_unhealthy=win_bad,
+            needs_admin=needs_admin,
         )
-        kinds = [d.kind for d in drives if d.kind in {"SSD", "HDD", "SCM"}]
+        kinds = [d.kind for d in targets if d.kind in {"SSD", "HDD", "SCM"}]
         if kinds:
             message = f"{', '.join(kinds)}. {message}"
 

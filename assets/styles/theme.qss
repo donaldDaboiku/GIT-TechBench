@@ -89,10 +89,17 @@ QPushButton#secondaryButton:hover {
     background-color: #243044;
 }
 
+QLabel#iconGlyph {
+    font-family: "Segoe MDL2 Assets";
+    background: transparent;
+}
+
 QPushButton#ghostButton {
     background-color: transparent;
     border: 1px solid #334155;
     color: #c5d0dc;
+    font-family: "Segoe MDL2 Assets";
+    font-weight: 400;
 }
 
 QPushButton#ghostButton:hover {

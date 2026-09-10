@@ -25,8 +25,10 @@ class StoragePage(ScrollPage):
         self.body.addWidget(
             PageHeader(
                 "Storage Health",
-                "SMART is shown only when Windows exposes it. Missing SMART is never treated as healthy. "
-                "SSD vs HDD comes from Windows Storage MediaType (Get-PhysicalDisk), not the drive model name.",
+                "SMART is shown only when it can be read from the drive (NVMe health log or ATA SMART). "
+                "That usually needs Run as administrator. Missing SMART is never treated as healthy. "
+                "USB flash drives typically have no SMART. SSD vs HDD comes from Windows Storage MediaType, "
+                "not the drive model name.",
             )
         )
         scan = QPushButton("Scan storage")
@@ -95,6 +97,9 @@ class StoragePage(ScrollPage):
             f"Windows disk health: {drive.windows_health}",
             f"SMART: {drive.smart_note}",
             f"Temperature: {drive.temperature_c}",
+            f"Wear / endurance: {drive.wear}",
+            f"Available spare: {drive.spare}",
+            f"Power-on hours: {drive.power_on_hours}",
         ]
         for line in lines:
             label = QLabel(line)

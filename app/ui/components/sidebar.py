@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from app import APP_NAME
-from app.ui.icons import icon_font
+from app.ui.icons import apply_icon_font
 from app.ui.nav import NAV_ITEMS, NavItem
 
 EXPANDED_WIDTH = 268
@@ -34,9 +34,10 @@ class _NavRow(QFrame):
         layout.setContentsMargins(12, 8, 12, 8)
         layout.setSpacing(12)
         self.icon_label = QLabel(item.glyph)
-        self.icon_label.setFont(icon_font(16))
+        self.icon_label.setObjectName("iconGlyph")
         self.icon_label.setFixedWidth(24)
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        apply_icon_font(self.icon_label, 16)
         self.text_label = QLabel(item.label)
         layout.addWidget(self.icon_label)
         layout.addWidget(self.text_label, 1)
@@ -55,7 +56,7 @@ class _NavRow(QFrame):
             f"QFrame {{ background: {bg}; border-radius: 8px; }} "
             f"QLabel {{ background: transparent; color: {fg}; }}"
         )
-        self.icon_label.setStyleSheet(f"color: {icon}; background: transparent;")
+        apply_icon_font(self.icon_label, 16, icon)
 
     def set_collapsed(self, collapsed: bool) -> None:
         self.text_label.setVisible(not collapsed)
@@ -95,7 +96,7 @@ class Sidebar(QFrame):
         header.addLayout(titles, 1)
         self.collapse_btn = QPushButton("\uE700")
         self.collapse_btn.setObjectName("ghostButton")
-        self.collapse_btn.setFont(icon_font(11))
+        apply_icon_font(self.collapse_btn, 11, "#c5d0dc")
         self.collapse_btn.setFixedSize(32, 32)
         self.collapse_btn.setToolTip("Collapse sidebar")
         self.collapse_btn.clicked.connect(self.toggle)

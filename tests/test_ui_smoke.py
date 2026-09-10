@@ -26,6 +26,17 @@ class UiSmokeTests(unittest.TestCase):
         self.assertEqual(len(glyphs), len(set(glyphs)))
         self.assertTrue(all(glyphs))
 
+    def test_sidebar_icon_stylesheet_keeps_segoe_icon_font(self) -> None:
+        from app.ui.components.sidebar import Sidebar
+        from app.ui.icons import icon_font_family
+
+        sidebar = Sidebar()
+        family = icon_font_family()
+        row = next(iter(sidebar._rows.values()))
+        self.assertIn(family, row.icon_label.styleSheet())
+        self.assertIn(family, sidebar.collapse_btn.styleSheet())
+        sidebar.close()
+
     def test_window_and_nav(self) -> None:
         window = MainWindow()
         self.assertGreaterEqual(len(window.pages), len(NAV_ITEMS))

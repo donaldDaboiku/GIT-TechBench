@@ -5,7 +5,7 @@ from __future__ import annotations
 from PySide6.QtWidgets import QFrame, QLabel, QVBoxLayout, QWidget
 
 from app.ui.components.page_header import PageHeader
-from app.ui.icons import icon_font
+from app.ui.icons import apply_icon_font
 from app.ui.nav import PHASE_LABELS, NavItem
 
 
@@ -24,8 +24,8 @@ class PlaceholderPage(QWidget):
         card_layout.setSpacing(12)
 
         glyph = QLabel(item.glyph)
-        glyph.setFont(icon_font(28))
-        glyph.setStyleSheet("color: #3d9cf0; background: transparent;")
+        glyph.setObjectName("iconGlyph")
+        apply_icon_font(glyph, 28, "#3d9cf0")
         phase = QLabel(PHASE_LABELS.get(item.phase, f"Phase {item.phase}"))
         phase.setStyleSheet("font-size: 18px; font-weight: 700; background: transparent;")
         body = QLabel(
