@@ -59,3 +59,11 @@ def open_event_viewer() -> None:
 
 def open_windows_camera() -> None:
     os.startfile("microsoft.windows.camera:")  # noqa: S606
+
+
+def open_device_manager() -> None:
+    os.startfile("devmgmt.msc")  # noqa: S606
+
+
+def open_windows_security() -> None:
+    os.startfile("windowsdefender:")  # noqa: S606

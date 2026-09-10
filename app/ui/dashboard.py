@@ -103,7 +103,8 @@ class DashboardPage(QWidget):
         hw_title.setObjectName("sectionTitle")
         layout.addWidget(hw_title)
         hw_note = QLabel(
-            "CPU, GPU, battery, storage, memory, and network status update when those diagnostics run."
+            "CPU, GPU, battery, storage, memory, and network status update when those diagnostics run. "
+            "Motherboard, drivers, security, USB, and software appear on Full Diagnostic."
         )
         hw_note.setObjectName("muted")
         hw_note.setWordWrap(True)
@@ -133,7 +134,7 @@ class DashboardPage(QWidget):
         self.run_btn = QPushButton("Run full diagnostic")
         self.run_btn.setMinimumHeight(44)
         self.run_btn.setToolTip(
-            "Runs battery, storage, memory, CPU, GPU, and network tests. "
+            "Runs battery, storage, memory, CPU, GPU, network, motherboard, drivers, security, software, and USB snapshot. "
             "Keyboard, mouse, display, audio, and camera stay UNKNOWN until you use those pages."
         )
         self.run_btn.clicked.connect(self.full_diagnostic_requested.emit)

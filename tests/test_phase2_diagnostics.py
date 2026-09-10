@@ -14,7 +14,7 @@ from app.modules.battery.battery_checker import health_band, health_percent
 from app.modules.display.display_tester import DisplayTester
 from app.modules.keyboard.keyboard_tester import KeyMark, KeyboardTester
 from app.modules.mouse.mouse_tester import MouseTester
-from app.modules.storage.disk_checker import overall_from_signals
+from app.modules.storage.disk_checker import classify_drive_kind, overall_from_signals
 from PySide6.QtCore import Qt
 
 
@@ -60,6 +60,17 @@ class StorageRulesTests(unittest.TestCase):
             windows_unhealthy=False,
         )
         self.assertEqual(status, Status.PASS)
+
+
+class DriveKindTests(unittest.TestCase):
+    def test_physicaldisk_media_type(self) -> None:
+        self.assertEqual(classify_drive_kind("SSD"), "SSD")
+        self.assertEqual(classify_drive_kind("HDD"), "HDD")
+        self.assertEqual(classify_drive_kind("4", "SATA"), "SSD")
+        self.assertEqual(classify_drive_kind("Unspecified", "NVMe"), "SSD")
+
+    def test_wmi_fixed_disk_is_not_hdd(self) -> None:
+        self.assertEqual(classify_drive_kind("Fixed hard disk media", "IDE"), "Unavailable")
 
 
 class KeyboardSessionTests(unittest.TestCase):

@@ -155,6 +155,42 @@
       "likely_cause": "Camera module, cable, or privacy-shutter/driver issue",
       "recommended_action": "Check the privacy shutter, Device Manager camera status, and vendor driver",
       "confidence": "Medium"
+    },
+    {
+      "id": "motherboard_secure_boot_off",
+      "module": "Motherboard",
+      "status": ["WARNING"],
+      "detail_match": {"secure_boot_off": "true"},
+      "likely_cause": "Secure Boot disabled in firmware",
+      "recommended_action": "Confirm firmware settings; enable Secure Boot if policy requires it",
+      "confidence": "Medium"
+    },
+    {
+      "id": "drivers_error_code",
+      "module": "Drivers",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"has_error_code": "true"},
+      "likely_cause": "Corrupted or missing driver",
+      "recommended_action": "Reinstall driver from vendor site; avoid generic driver packs",
+      "confidence": "Medium"
+    },
+    {
+      "id": "security_defender_off",
+      "module": "Security",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"defender_off_no_av": "true"},
+      "likely_cause": "System unprotected",
+      "recommended_action": "Re-enable Defender or install AV before further use",
+      "confidence": "High"
+    },
+    {
+      "id": "usb_port_fail",
+      "module": "USB",
+      "status": ["FAIL", "WARNING"],
+      "detail_match": {"port_fail": "true"},
+      "likely_cause": "Port/controller hardware fault",
+      "recommended_action": "Retest with known-good device in other ports; check Device Manager",
+      "confidence": "Medium"
     }
   ]
 }

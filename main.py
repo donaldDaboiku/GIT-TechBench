@@ -2,12 +2,44 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+
+def _venv_python() -> Path:
+    return ROOT / ".venv" / "Scripts" / "python.exe"
+
+
+def _rerun_in_venv_if_needed() -> None:
+    """If this interpreter lacks PySide6, relaunch with the project venv."""
+    try:
+        import PySide6  # noqa: F401
+        return
+    except ImportError:
+        pass
+
+    venv_py = _venv_python()
+    current = Path(sys.executable).resolve()
+    if venv_py.exists() and current != venv_py.resolve():
+        raise SystemExit(subprocess.call([str(venv_py), *sys.argv]))
+
+    sys.stderr.write(
+        "PySide6 is not installed in this Python.\n"
+        "From the project folder run:\n"
+        "  python -m venv .venv\n"
+        "  .\\.venv\\Scripts\\Activate.ps1\n"
+        "  pip install -r requirements.txt\n"
+        "  python main.py\n"
+    )
+    raise SystemExit(1)
+
+
+_rerun_in_venv_if_needed()
 
 from PySide6.QtGui import QFont  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402

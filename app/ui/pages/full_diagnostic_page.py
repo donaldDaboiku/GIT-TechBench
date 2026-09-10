@@ -76,9 +76,10 @@ class FullDiagnosticPage(ScrollPage):
         self.body.addWidget(
             PageHeader(
                 "Full Diagnostic",
-                "Runs battery, storage, memory, CPU, GPU, and network tests. "
+                "Runs battery, storage, memory, CPU, GPU, network, motherboard, drivers, security, software, and a USB snapshot. "
                 "Keyboard, mouse, display, audio, and camera stay UNKNOWN until you run those pages. "
-                "Windows Health commands are never auto-started.",
+                "Windows Health commands and USB plug/unplug watch are never auto-started. "
+                "BIOS-update check is page-only and does not contact the network.",
             )
         )
         self.overall = StatusBadge()

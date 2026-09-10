@@ -10,15 +10,32 @@ from app.core.recommendation_engine import RecommendationEngine
 from app.models.diagnostic_result import DiagnosticResult, Status
 from app.modules.battery.battery_checker import BatteryChecker
 from app.modules.cpu.cpu_monitor import CpuMonitor
+from app.modules.drivers.driver_health import DriverHealth
 from app.modules.gpu.gpu_monitor import GpuMonitor
 from app.modules.memory.ram_checker import RamChecker
+from app.modules.motherboard.motherboard_info import MotherboardInfo
 from app.modules.network.network_tester import NetworkTester
+from app.modules.security.security_health import SecurityHealth
+from app.modules.software.software_inventory import SoftwareInventory
 from app.modules.storage.disk_checker import DiskChecker
+from app.modules.usb.usb_port_tester import UsbPortTester
 
 ProgressFn = Callable[[str], None]
 ResultFn = Callable[[DiagnosticResult], None]
 
-AUTOMATED_MODULES = ("Battery", "Storage", "Memory", "CPU", "GPU", "Network")
+AUTOMATED_MODULES = (
+    "Battery",
+    "Storage",
+    "Memory",
+    "CPU",
+    "GPU",
+    "Network",
+    "Motherboard",
+    "Drivers",
+    "Security",
+    "Software",
+    "USB",
+)
 INTERACTIVE_MODULES = ("Keyboard", "Mouse", "Display", "Audio", "Camera", "Windows")
 
 
@@ -76,6 +93,31 @@ class DiagnosticsEngine:
             progress("Network tests…")
         _n, network = NetworkTester(internet_url=internet_url, dns_hostname=dns_hostname).check()
         emit("Network", network)
+
+        if progress:
+            progress("Motherboard / BIOS…")
+        _mb, motherboard = MotherboardInfo().check()
+        emit("Motherboard", motherboard)
+
+        if progress:
+            progress("Driver health…")
+        _d, drivers = DriverHealth().check()
+        emit("Drivers", drivers)
+
+        if progress:
+            progress("Security health…")
+        _sec, security = SecurityHealth().check(include_updates=True)
+        emit("Security", security)
+
+        if progress:
+            progress("Software inventory…")
+        _sw, software = SoftwareInventory().check()
+        emit("Software", software)
+
+        if progress:
+            progress("USB snapshot…")
+        _u, usb = UsbPortTester().snapshot()
+        emit("USB", usb)
         return results
 
     def merge_session(

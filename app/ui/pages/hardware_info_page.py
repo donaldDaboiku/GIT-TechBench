@@ -122,8 +122,8 @@ class HardwareInfoPage(QWidget):
                 (
                     f"Disk {i}",
                     FieldValue.measured(
-                        f"{disk.model.display()} · {size} · {disk.interface.display()} · "
-                        f"serial {disk.serial.display()}"
+                        f"{disk.model.display()} · {disk.media_type.display()} · {disk.bus_type.display()} · "
+                        f"{size} · {disk.interface.display()} · serial {disk.serial.display()}"
                     ),
                 )
             )

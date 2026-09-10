@@ -96,6 +96,7 @@ class PhysicalDiskInfo:
     size_bytes: int | None
     interface: FieldValue
     media_type: FieldValue
+    bus_type: FieldValue = field(default_factory=FieldValue.unavailable)
 
 
 @dataclass
@@ -170,8 +171,14 @@ class SystemInfo:
         return format_bytes(self.ram_total_bytes)
 
     def storage_summary(self) -> str:
+        kinds = [
+            disk.media_type.display()
+            for disk in self.physical_disks
+            if disk.media_type.display() in {"SSD", "HDD", "SCM"}
+        ]
+        kind_prefix = f"{', '.join(kinds)} · " if kinds else ""
         if not self.volumes:
-            return "Unavailable"
+            return f"{kind_prefix}Unavailable" if kind_prefix else "Unavailable"
         parts: list[str] = []
         for vol in self.volumes:
             if vol.total_bytes is None:
@@ -182,7 +189,7 @@ class SystemInfo:
                 pct = 100.0 * vol.used_bytes / vol.total_bytes
                 used_pct = f", {pct:.0f}% used"
             parts.append(f"{vol.letter} {format_bytes(vol.total_bytes)}{used_pct}")
-        return " · ".join(parts)
+        return kind_prefix + " · ".join(parts)
 
 
 def format_bytes(num: int) -> str:
@@ -493,11 +500,34 @@ def _read_storage(
                 serial=FieldValue.measured(getattr(row, "SerialNumber", None)),
                 size_bytes=size_bytes,
                 interface=FieldValue.measured(getattr(row, "InterfaceType", None)),
-                media_type=FieldValue.measured(getattr(row, "MediaType", None)),
+                media_type=FieldValue.unavailable("SSD/HDD not read yet"),
+                bus_type=FieldValue.unavailable(),
             )
         )
-
+    _apply_physical_disk_kind(disks)
     return volumes, disks
+
+
+def _apply_physical_disk_kind(disks: list[PhysicalDiskInfo]) -> None:
+    """Overlay Get-PhysicalDisk MediaType (SSD/HDD). Lazy import avoids a cycle."""
+    if not disks:
+        return
+    from app.modules.storage.disk_checker import _match_ps, _powershell_physical_disks, classify_drive_kind
+
+    pool = _powershell_physical_disks()
+    for disk in disks:
+        serial = disk.serial.value or ""
+        model = disk.model.value or ""
+        row = _match_ps(serial, model, pool)
+        media = str(row.get("media") or "") if row else ""
+        bus = str(row.get("bus") or "") if row else ""
+        kind = classify_drive_kind(media, bus)
+        if kind == "Unavailable":
+            disk.media_type = FieldValue.unavailable("Get-PhysicalDisk did not report SSD/HDD")
+        else:
+            disk.media_type = FieldValue.measured(kind, "From Get-PhysicalDisk MediaType")
+        if bus:
+            disk.bus_type = FieldValue.measured(bus, "From Get-PhysicalDisk BusType")
 
 
 def _read_gpus(wmi_session: WmiSession, errors: list[str]) -> list[GpuInfo]:

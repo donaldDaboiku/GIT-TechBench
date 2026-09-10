@@ -2,7 +2,7 @@
 
 Professional PC Diagnostics & IT Support Toolkit for Windows 10/11.
 
-Phase 3 adds CPU monitoring, GPU inventory, speaker/mic tests, camera preview/capture, and Windows Health (SFC, DISM CheckHealth, read-only chkdsk) with confirmation and live output.
+Phase 5 adds SQLite session history, searchable past reports, and PDF/JSON export. Storage Health identifies SSD vs HDD from Windows Storage MediaType.
 
 ## Requirements
 
@@ -28,6 +28,8 @@ pip install -r requirements.txt
 ```powershell
 python main.py
 ```
+
+`main.py` uses the project `.venv` automatically if the current Python does not have PySide6. You can also run `.\\.venv\\Scripts\\python.exe main.py` after activating the venv.
 
 CLI inventory:
 

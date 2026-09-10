@@ -27,6 +27,8 @@ CREATE_NO_WINDOW = 0x08000000
 class DriveReport:
     model: str
     serial: str
+    kind: str
+    bus: str
     media: str
     interface: str
     size_bytes: int | None
@@ -95,11 +97,13 @@ def _details(report: StorageReport) -> dict[str, str]:
     any_smart = any(d.smart_available for d in report.drives)
     predict = any(d.smart_predict_failure is True for d in report.drives)
     realloc = any(d.realloc_or_pending for d in report.drives)
+    kinds = ",".join(d.kind for d in report.drives)
     return {
         "smart_available": "true" if any_smart else "false",
         "smart_predict_failure": "true" if predict else "false",
         "smart_realloc_or_pending": "true" if realloc else "false",
         "space_warning": "true" if report.space_warning else "false",
+        "drive_kinds": kinds,
     }
 
 
@@ -115,13 +119,25 @@ def _scalar(value: object) -> object:
     return value
 
 
+def classify_drive_kind(media: str, bus: str = "") -> str:
+    """SSD / HDD / SCM from Storage MediaType. NVMe bus implies SSD. Never from model name."""
+    key = (media or "").strip().upper()
+    mapped = {
+        "SSD": "SSD",
+        "HDD": "HDD",
+        "SCM": "SCM",
+        "3": "HDD",
+        "4": "SSD",
+        "5": "SCM",
+    }
+    if key in mapped:
+        return mapped[key]
+    if (bus or "").strip().upper() == "NVME":
+        return "SSD"
+    return "Unavailable"
+
+
 def _as_int(value: object) -> int | None:
-    try:
-        if value is None or value == "":
-            return None
-        return int(value)
-    except (TypeError, ValueError):
-        return None
     try:
         if value is None or value == "":
             return None
@@ -249,7 +265,7 @@ def _powershell_physical_disks() -> list[dict[str, Any]]:
         " $c = $null; try { $c = $_ | Get-StorageReliabilityCounter } catch {};"
         " [pscustomobject]@{"
         " name=$_.FriendlyName; serial=$_.SerialNumber; media=$_.MediaType.ToString();"
-        " health=$_.HealthStatus.ToString(); size=$_.Size;"
+        " bus=$_.BusType.ToString(); health=$_.HealthStatus.ToString(); size=$_.Size;"
         " temperature=$(if($c){$c.Temperature}); wear=$(if($c){$c.Wear})"
         " } } | ConvertTo-Json -Compress"
     )
@@ -348,11 +364,16 @@ def _collect(session: WmiSession) -> StorageReport:
         windows_health = _clean(getattr(row, "Status", None)) or "Unavailable"
         if ps and ps.get("health"):
             windows_health = str(ps["health"])
+        ps_media = str(ps.get("media") or "") if ps else ""
+        ps_bus = str(ps.get("bus") or "") if ps else ""
+        kind = classify_drive_kind(ps_media, ps_bus)
         drives.append(
             DriveReport(
                 model=model,
                 serial=serial,
-                media=_clean(getattr(row, "MediaType", None)) or "Unavailable",
+                kind=kind,
+                bus=ps_bus or "Unavailable",
+                media=ps_media or _clean(getattr(row, "MediaType", None)) or "Unavailable",
                 interface=_clean(getattr(row, "InterfaceType", None)) or "Unavailable",
                 size_bytes=_as_int(getattr(row, "Size", None)),
                 windows_health=windows_health,
@@ -370,6 +391,8 @@ def _collect(session: WmiSession) -> StorageReport:
                 DriveReport(
                     model=str(ps.get("name") or "Unavailable"),
                     serial=str(ps.get("serial") or "Unavailable"),
+                    kind=classify_drive_kind(str(ps.get("media") or ""), str(ps.get("bus") or "")),
+                    bus=str(ps.get("bus") or "Unavailable"),
                     media=str(ps.get("media") or "Unavailable"),
                     interface="Unavailable",
                     size_bytes=_as_int(ps.get("size")),
@@ -410,6 +433,9 @@ def _collect(session: WmiSession) -> StorageReport:
             space_warning=space_warning,
             windows_unhealthy=win_bad,
         )
+        kinds = [d.kind for d in drives if d.kind in {"SSD", "HDD", "SCM"}]
+        if kinds:
+            message = f"{', '.join(kinds)}. {message}"
 
     return StorageReport(
         drives=drives,

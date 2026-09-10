@@ -25,7 +25,8 @@ class StoragePage(ScrollPage):
         self.body.addWidget(
             PageHeader(
                 "Storage Health",
-                "SMART is shown only when Windows exposes it. Missing SMART is never treated as healthy.",
+                "SMART is shown only when Windows exposes it. Missing SMART is never treated as healthy. "
+                "SSD vs HDD comes from Windows Storage MediaType (Get-PhysicalDisk), not the drive model name.",
             )
         )
         scan = QPushButton("Scan storage")
@@ -89,7 +90,7 @@ class StoragePage(ScrollPage):
         layout = QVBoxLayout(card)
         size = format_bytes(drive.size_bytes) if drive.size_bytes else "Unavailable"
         lines = [
-            f"{drive.model}  ·  {size}  ·  {drive.interface}  ·  {drive.media}",
+            f"{drive.model}  ·  {size}  ·  {drive.kind}  ·  {drive.bus}  ·  {drive.interface}",
             f"Serial: {drive.serial}",
             f"Windows disk health: {drive.windows_health}",
             f"SMART: {drive.smart_note}",

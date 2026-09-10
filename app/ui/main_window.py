@@ -12,6 +12,8 @@ from app.core.config import load_app_config
 from app.core.diagnostics_engine import DiagnosticsEngine
 from app.core.system_info import SystemInfo
 from app.models.diagnostic_result import DiagnosticResult
+from app.services.database_service import DatabaseService
+from app.services.report_service import ReportService, build_session_record
 from app.ui.components.sidebar import Sidebar
 from app.ui.dashboard import DashboardPage
 from app.ui.nav import NAV_ITEMS
@@ -20,16 +22,22 @@ from app.ui.pages.battery_page import BatteryPage
 from app.ui.pages.camera_page import CameraPage
 from app.ui.pages.cpu_page import CpuPage
 from app.ui.pages.display_page import DisplayPage
+from app.ui.pages.driver_page import DriverPage
 from app.ui.pages.full_diagnostic_page import FullDiagnosticPage
 from app.ui.pages.gpu_page import GpuPage
 from app.ui.pages.hardware_info_page import HardwareInfoPage
 from app.ui.pages.keyboard_page import KeyboardPage
 from app.ui.pages.memory_page import MemoryPage
+from app.ui.pages.motherboard_page import MotherboardPage
 from app.ui.pages.mouse_page import MousePage
 from app.ui.pages.network_page import NetworkPage
 from app.ui.pages.placeholder_page import PlaceholderPage
+from app.ui.pages.reports_page import ReportsPage
+from app.ui.pages.security_page import SecurityPage
 from app.ui.pages.settings_page import SettingsPage
+from app.ui.pages.software_page import SoftwarePage
 from app.ui.pages.storage_page import StoragePage
+from app.ui.pages.usb_page import UsbPage
 from app.ui.pages.windows_health_page import WindowsHealthPage
 from app.ui.workers import FullDiagnosticWorker, SystemInfoWorker
 
@@ -79,6 +87,18 @@ class MainWindow(QMainWindow):
         self.audio_page = AudioPage()
         self.camera_page = CameraPage()
         self.windows_page = WindowsHealthPage()
+        self.motherboard_page = MotherboardPage()
+        self.driver_page = DriverPage()
+        self.security_page = SecurityPage()
+        self.usb_page = UsbPage()
+        self.software_page = SoftwarePage()
+        self.reports_page = ReportsPage()
+        self._db = DatabaseService()
+        self._reports = ReportService()
+        self.reports_page.save_requested.connect(self._save_session)
+        self.reports_page.reopen_requested.connect(self._reopen_session)
+        self.reports_page.export_pdf_btn.clicked.connect(self._export_pdf)
+        self.reports_page.export_json_btn.clicked.connect(self._export_json)
 
         self._register("dashboard", self.dashboard)
         self._register("full_diagnostic", self.full_page)
@@ -94,7 +114,13 @@ class MainWindow(QMainWindow):
         self._register("gpu", self.gpu_page)
         self._register("audio", self.audio_page)
         self._register("camera", self.camera_page)
+        self._register("usb", self.usb_page)
+        self._register("motherboard", self.motherboard_page)
+        self._register("drivers", self.driver_page)
+        self._register("security", self.security_page)
+        self._register("software", self.software_page)
         self._register("windows", self.windows_page)
+        self._register("reports", self.reports_page)
         self._register("settings", self.settings_page)
         for item in NAV_ITEMS:
             if item.id in self.pages:
@@ -114,6 +140,11 @@ class MainWindow(QMainWindow):
             self.audio_page,
             self.camera_page,
             self.windows_page,
+            self.motherboard_page,
+            self.driver_page,
+            self.security_page,
+            self.usb_page,
+            self.software_page,
         ):
             page.result_ready.connect(self._on_module_result)
 
@@ -121,10 +152,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
         status = QStatusBar()
-        status.showMessage(f"{APP_NAME} v{__version__}  ·  Phase 3 Advanced Tools")
+        status.showMessage(f"{APP_NAME} v{__version__}  ·  Phase 5 Reporting")
         self.setStatusBar(status)
 
         self.sidebar.set_active("dashboard")
+        self._refresh_history()
         self.start_scan()
 
     def _register(self, nav_id: str, widget: QWidget) -> None:
@@ -205,6 +237,7 @@ class MainWindow(QMainWindow):
             self._on_module_result(item)
         self.full_page.show_idle("Automated checks finished.")
         self.statusBar().showMessage("Automated diagnostics finished.")
+        self._save_session(auto=True)
 
     def _on_diag_fail(self, message: str) -> None:
         self.full_page.show_idle(f"Failed: {message}")
@@ -214,3 +247,89 @@ class MainWindow(QMainWindow):
         self._results[result.module] = result
         self.full_page.upsert(result)
         self.dashboard.apply_results(self._results)
+
+    def _session_payload(self) -> dict:
+        notes = self.reports_page.notes_payload()
+        return build_session_record(
+            info=self._info,
+            results=list(self._results.values()),
+            technician_name=self.settings_page.technician_name(),
+            **notes,
+        )
+
+    def _save_session(self, auto: bool = False) -> None:
+        if not self._results:
+            self.reports_page.status.setText("Nothing to save yet — run diagnostics first.")
+            return
+        try:
+            session_id = self._db.save(self._session_payload())
+        except Exception as exc:
+            logger.exception("Failed to save session")
+            self.reports_page.status.setText(f"Save failed: {exc}")
+            self.statusBar().showMessage(f"Save failed: {exc}")
+            return
+        how = "Auto-saved" if auto else "Saved"
+        message = f"{how} session #{session_id}."
+        self._refresh_history(message)
+        self.statusBar().showMessage(message)
+
+    def _refresh_history(self, message: str = "") -> None:
+        try:
+            rows = self._db.list_sessions()
+        except Exception as exc:
+            logger.exception("History load failed")
+            self.reports_page.status.setText(f"History unavailable: {exc}")
+            return
+        self.reports_page.set_history(rows, message)
+
+    def _reopen_session(self, session_id: object) -> None:
+        try:
+            session = self._db.get(int(session_id))
+        except Exception as exc:
+            self.reports_page.status.setText(f"Could not open session: {exc}")
+            return
+        if not session:
+            self.reports_page.status.setText("Session not found.")
+            return
+        self.reports_page.apply_session_fields(session)
+        self._results = {}
+        for result in self.reports_page.tests_from_session(session):
+            self._on_module_result(result)
+        self._on_navigate("full_diagnostic")
+        self.reports_page.status.setText(f"Reopened session #{session.get('id')}.")
+        self.statusBar().showMessage(f"Reopened session #{session.get('id')}.")
+
+    def _export_json(self) -> None:
+        session = self._session_payload()
+        path = self.reports_page.chosen_path(".json", self._reports.default_stem(session))
+        if path is None:
+            return
+        try:
+            written = self._reports.export_json(session, path)
+        except Exception as exc:
+            logger.exception("JSON export failed")
+            self.reports_page.status.setText(f"JSON export failed: {exc}")
+            return
+        self.reports_page.status.setText(f"Wrote {written}")
+        self.statusBar().showMessage(f"JSON exported: {written}")
+
+    def _export_pdf(self) -> None:
+        if not self._reports.export_available():
+            self.reports_page.status.setText("PDF export needs the reportlab package.")
+            return
+        session = self._session_payload()
+        path = self.reports_page.chosen_path(".pdf", self._reports.default_stem(session))
+        if path is None:
+            return
+        try:
+            written = self._reports.export_pdf(session, path)
+        except Exception as exc:
+            logger.exception("PDF export failed")
+            self.reports_page.status.setText(f"PDF export failed: {exc}")
+            return
+        self.reports_page.status.setText(f"Wrote {written}")
+        self.statusBar().showMessage(f"PDF exported: {written}")
+
+    def closeEvent(self, event) -> None:  # noqa: N802
+        self.usb_page.stop_watch()
+        super().closeEvent(event)

@@ -59,6 +59,18 @@ class WmiSession:
             logger.debug("root\\wmi query failed for %s", class_name, exc_info=True)
             return []
 
+    def ns(self, path: str) -> Any:
+        """Open an extra WMI namespace on this COM apartment."""
+        if not self._initialized:
+            return None
+        try:
+            import wmi
+
+            return wmi.WMI(namespace=path)
+        except Exception:
+            logger.debug("WMI namespace %s unavailable", path, exc_info=True)
+            return None
+
     def close(self) -> None:
         # ponytail: do not CoUninitialize; pythoncom + WMI still hold IUnknowns.
         self.client = None

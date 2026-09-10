@@ -70,8 +70,7 @@ class SettingsPage(QWidget):
         about_title.setObjectName("fieldLabel")
         about_body = QLabel(
             f"{APP_NAME} {__version__}\n{APP_TAGLINE}\n\n"
-            "Phase 3 — Advanced Tools. CPU, GPU, audio, camera, and Windows Health "
-            "join the Phase 2 diagnostics. IT-support modules and PDF history come later."
+            "Phase 5 — Reporting. Save sessions, search history, reopen past runs, and export PDF/JSON."
         )
         about_body.setWordWrap(True)
         about_body.setObjectName("subtitle")

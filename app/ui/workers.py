@@ -81,6 +81,34 @@ class CommandWorker(QThread):
         self.finished_code.emit(int(proc.wait()))
 
 
+class UsbWatchWorker(QThread):
+    """Poll USB inventory until the technician stops the watch."""
+
+    snapshot = Signal(object)
+    failed = Signal(str)
+
+    def __init__(self, parent=None) -> None:
+        super().__init__(parent)
+        self._running = True
+
+    def stop(self) -> None:
+        self._running = False
+
+    def run(self) -> None:
+        from app.modules.usb.usb_port_tester import UsbPortTester
+
+        tester = UsbPortTester()
+        while self._running:
+            try:
+                report, _result = tester.snapshot()
+            except Exception as exc:
+                logger.exception("USB watch snapshot failed")
+                self.failed.emit(str(exc))
+                return
+            self.snapshot.emit(report)
+            self.msleep(1500)
+
+
 class MicWorker(QThread):
     """Sample microphone RMS off the UI thread."""
 
