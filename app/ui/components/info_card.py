@@ -19,7 +19,7 @@ class InfoCard(QFrame):
 
         top = QHBoxLayout()
         icon = QLabel(glyph)
-        icon.setFont(icon_font(16))
+        icon.setFont(icon_font(18))
         icon.setStyleSheet("color: #3d9cf0; background: transparent;")
         heading = QLabel(title.upper())
         heading.setObjectName("cardTitle")

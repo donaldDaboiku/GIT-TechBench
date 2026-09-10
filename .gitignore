@@ -9,8 +9,16 @@ env/
 # App output
 reports/*.pdf
 reports/*.json
+reports/captures/
 database/*.db
 database/*.db-journal
+config/techbench.ini
+logs/
+
+# Portable build
+build/
+dist/
+*.spec.bak
 
 # IDE / OS
 .idea/

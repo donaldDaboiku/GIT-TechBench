@@ -38,8 +38,9 @@ class DatabaseService:
     """Local history store for diagnostic sessions."""
 
     def __init__(self, db_path: Path | None = None) -> None:
-        root = Path(__file__).resolve().parents[2]
-        self.db_path = db_path or (root / "database" / "techbench.db")
+        from app.core.config import data_dir
+
+        self.db_path = db_path or (data_dir("database") / "techbench.db")
 
     def initialize(self) -> None:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)

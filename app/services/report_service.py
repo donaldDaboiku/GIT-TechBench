@@ -14,8 +14,9 @@ class ReportService:
     """Creates technician reports from a diagnostic session."""
 
     def __init__(self, output_dir: Path | None = None) -> None:
-        root = Path(__file__).resolve().parents[2]
-        self.output_dir = output_dir or (root / "reports")
+        from app.core.config import data_dir
+
+        self.output_dir = output_dir or data_dir("reports")
 
     def export_available(self) -> bool:
         try:

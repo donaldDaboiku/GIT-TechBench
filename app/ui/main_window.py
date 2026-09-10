@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import logging
 
-from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QStackedWidget, QStatusBar, QWidget
 
-from app import APP_NAME, APP_TAGLINE, ORGANIZATION_NAME, __version__
-from app.core.config import load_app_config
+from app import APP_NAME, APP_TAGLINE, __version__
+from app.core.config import app_settings, load_app_config
 from app.core.diagnostics_engine import DiagnosticsEngine
 from app.core.system_info import SystemInfo
 from app.models.diagnostic_result import DiagnosticResult
@@ -152,7 +151,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
         status = QStatusBar()
-        status.showMessage(f"{APP_NAME} v{__version__}  ·  Phase 5 Reporting")
+        status.showMessage(f"{APP_NAME} v{__version__}  ·  Phase 6 Portable")
         self.setStatusBar(status)
 
         self.sidebar.set_active("dashboard")
@@ -190,7 +189,7 @@ class MainWindow(QMainWindow):
             return
         self._on_navigate("full_diagnostic")
         cfg = load_app_config().get("network") or {}
-        settings = QSettings(ORGANIZATION_NAME, APP_NAME)
+        settings = app_settings()
         url = settings.value("internet_check_url", cfg.get("internet_check_url", ""), str)
         dns = settings.value("dns_test_hostname", cfg.get("dns_test_hostname", ""), str)
         self.full_page.show_running()

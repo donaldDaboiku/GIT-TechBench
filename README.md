@@ -2,34 +2,36 @@
 
 Professional PC Diagnostics & IT Support Toolkit for Windows 10/11.
 
-Phase 5 adds SQLite session history, searchable past reports, and PDF/JSON export. Storage Health identifies SSD vs HDD from Windows Storage MediaType.
+Phase 6 is portable USB: copy one folder to a flash drive and run it. Nothing is installed on the PC under test. Settings, history, logs, and reports stay in that folder.
 
-## Requirements
+## Portable USB (no per-PC install)
 
-- Windows 10 or 11
-- Python 3.12 or newer
-- `PySide6-Essentials`, `psutil`, `pywin32`, `WMI`
-- Optional: `opencv-python-headless` for in-app camera preview and still capture
-- Administrator rights are **not** required for inventory. SFC, DISM, and Check Disk require elevation and confirmation.
+On a build machine (once):
 
-## Install
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+.\scripts\build_portable.ps1
+```
 
-From the project root:
+Copy `dist\GIT-TechBench-Portable` onto a USB stick. On each PC, plug in the stick and run `TechBench.exe` (or `Launch-TechBench.bat`).
+
+The `_internal` folder must stay next to the exe. A Python venv cannot be copied to USB — Windows venv paths are machine-specific; the portable folder is the supported method.
+
+Windows may show a SmartScreen prompt the first time. That is not an install. SFC / DISM / Check Disk still require administrator rights on the machine you are diagnosing.
+
+## Development run
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-## Run
-
-```powershell
 python main.py
 ```
 
-`main.py` uses the project `.venv` automatically if the current Python does not have PySide6. You can also run `.\\.venv\\Scripts\\python.exe main.py` after activating the venv.
+`main.py` uses the project `.venv` automatically if the current Python does not have PySide6.
 
 CLI inventory:
 
@@ -37,7 +39,7 @@ CLI inventory:
 python -m app.core.system_info
 ```
 
-Internet check URL and DNS hostname are in `config/app_config.json` and can be overridden in Settings. Recommendation rules are in `config/recommendation_rules.json`.
+Internet check URL and DNS hostname are in `config/app_config.json` and can be overridden in Settings (`config/techbench.ini` in the app folder). Recommendation rules are in `config/recommendation_rules.json`.
 
 ## Tests
 
@@ -48,6 +50,7 @@ python -m unittest discover -s tests -t . -v
 ## Safety
 
 - No formatting, file deletion, or registry edits
+- Settings are an INI file in the app folder, not the Registry
 - No automatic driver installs
 - Memory Diagnostic is never launched without confirmation
 - Untested keyboard keys are never auto-failed

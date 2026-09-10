@@ -17,6 +17,8 @@ def _venv_python() -> Path:
 
 def _rerun_in_venv_if_needed() -> None:
     """If this interpreter lacks PySide6, relaunch with the project venv."""
+    if getattr(sys, "frozen", False):
+        return
     try:
         import PySide6  # noqa: F401
         return
@@ -45,6 +47,7 @@ from PySide6.QtGui import QFont  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from app import APP_NAME, ORGANIZATION_NAME  # noqa: E402
+from app.core.config import resource_root  # noqa: E402
 from app.core.logging_config import setup_logging  # noqa: E402
 from app.ui.main_window import MainWindow  # noqa: E402
 
@@ -56,7 +59,7 @@ def main() -> int:
     app.setOrganizationName(ORGANIZATION_NAME)
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 10))
-    qss_path = ROOT / "assets" / "styles" / "theme.qss"
+    qss_path = resource_root() / "assets" / "styles" / "theme.qss"
     if qss_path.exists():
         app.setStyleSheet(qss_path.read_text(encoding="utf-8"))
     window = MainWindow()

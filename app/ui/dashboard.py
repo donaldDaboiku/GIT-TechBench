@@ -19,6 +19,7 @@ from app.core.system_info import DataOrigin, SystemInfo, format_bytes
 from app.models.diagnostic_result import DiagnosticResult, Status
 from app.ui.components.info_card import InfoCard
 from app.ui.components.page_header import PageHeader
+from app.ui.nav import nav_glyph
 
 
 class DashboardPage(QWidget):
@@ -112,12 +113,12 @@ class DashboardPage(QWidget):
 
         grid = QGridLayout()
         grid.setSpacing(12)
-        self.cpu_card = InfoCard("CPU", "\uE950")
-        self.ram_card = InfoCard("RAM", "\uE8C8")
-        self.storage_card = InfoCard("Storage", "\uEDA2")
-        self.gpu_card = InfoCard("GPU", "\uEA86")
-        self.battery_card = InfoCard("Battery", "\uE83F")
-        self.network_card = InfoCard("Network", "\uE968")
+        self.cpu_card = InfoCard("CPU", nav_glyph("cpu"))
+        self.ram_card = InfoCard("RAM", nav_glyph("memory"))
+        self.storage_card = InfoCard("Storage", nav_glyph("storage"))
+        self.gpu_card = InfoCard("GPU", nav_glyph("gpu"))
+        self.battery_card = InfoCard("Battery", nav_glyph("battery"))
+        self.network_card = InfoCard("Network", nav_glyph("network"))
         for i, card in enumerate(
             (
                 self.cpu_card,

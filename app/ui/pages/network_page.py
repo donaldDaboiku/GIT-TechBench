@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSettings, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout
 
-from app import APP_NAME, ORGANIZATION_NAME
-from app.core.config import load_app_config
+from app.core.config import app_settings, load_app_config
 from app.core.recommendation_engine import RecommendationEngine
 from app.models.diagnostic_result import DiagnosticResult
 from app.modules.network.network_tester import AdapterReport, NetworkReport, NetworkTester
@@ -24,7 +23,7 @@ class NetworkPage(ScrollPage):
         self.recommender = RecommendationEngine()
         self._worker: CallableWorker | None = None
         cfg = load_app_config().get("network") or {}
-        settings = QSettings(ORGANIZATION_NAME, APP_NAME)
+        settings = app_settings()
         self.url = settings.value("internet_check_url", cfg.get("internet_check_url", ""), str)
         self.dns = settings.value("dns_test_hostname", cfg.get("dns_test_hostname", ""), str)
         self.body.addWidget(
@@ -48,7 +47,7 @@ class NetworkPage(ScrollPage):
 
     def refresh_config(self) -> None:
         cfg = load_app_config().get("network") or {}
-        settings = QSettings(ORGANIZATION_NAME, APP_NAME)
+        settings = app_settings()
         self.url = settings.value("internet_check_url", cfg.get("internet_check_url", ""), str)
         self.dns = settings.value("dns_test_hostname", cfg.get("dns_test_hostname", ""), str)
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -13,20 +12,25 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app import APP_NAME, APP_TAGLINE, ORGANIZATION_NAME, __version__
-from app.core.config import load_app_config
+from app import APP_NAME, APP_TAGLINE, __version__
+from app.core.config import app_settings, load_app_config, project_root
 from app.ui.components.page_header import PageHeader
 
 
 class SettingsPage(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.settings = QSettings(ORGANIZATION_NAME, APP_NAME)
+        self.settings = app_settings()
         cfg = load_app_config().get("network") or {}
         layout = QVBoxLayout(self)
         layout.setContentsMargins(28, 24, 28, 24)
         layout.setSpacing(16)
-        layout.addWidget(PageHeader("Settings", "Technician identity and network test endpoints."))
+        layout.addWidget(
+            PageHeader(
+                "Settings",
+                "Technician identity and network test endpoints. Values are stored as an INI file in this app folder.",
+            )
+        )
 
         card = QFrame()
         card.setObjectName("card")
@@ -70,7 +74,9 @@ class SettingsPage(QWidget):
         about_title.setObjectName("fieldLabel")
         about_body = QLabel(
             f"{APP_NAME} {__version__}\n{APP_TAGLINE}\n\n"
-            "Phase 5 — Reporting. Save sessions, search history, reopen past runs, and export PDF/JSON."
+            "Phase 6 — Portable. Copy the app folder to a USB stick and run TechBench.exe. "
+            "Settings, logs, history, and reports stay in that folder — not installed on the PC.\n\n"
+            f"Data folder:\n{project_root()}"
         )
         about_body.setWordWrap(True)
         about_body.setObjectName("subtitle")
@@ -93,4 +99,4 @@ class SettingsPage(QWidget):
         self.settings.setValue("technician_name", self.name_edit.text().strip())
         self.settings.setValue("internet_check_url", self.url_edit.text().strip())
         self.settings.setValue("dns_test_hostname", self.dns_edit.text().strip())
-        self.status.setText("Saved on this PC.")
+        self.status.setText("Saved in this app folder (stays on the USB if you run from a flash drive).")

@@ -21,6 +21,11 @@ class UiSmokeTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.app = QApplication.instance() or QApplication([])
 
+    def test_sidebar_glyphs_are_unique(self) -> None:
+        glyphs = [item.glyph for item in NAV_ITEMS]
+        self.assertEqual(len(glyphs), len(set(glyphs)))
+        self.assertTrue(all(glyphs))
+
     def test_window_and_nav(self) -> None:
         window = MainWindow()
         self.assertGreaterEqual(len(window.pages), len(NAV_ITEMS))
