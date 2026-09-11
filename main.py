@@ -43,26 +43,44 @@ def _rerun_in_venv_if_needed() -> None:
 
 _rerun_in_venv_if_needed()
 
+import ctypes  # noqa: E402
+
 from PySide6.QtGui import QFont  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 from app import APP_NAME, ORGANIZATION_NAME  # noqa: E402
 from app.core.config import resource_root  # noqa: E402
 from app.core.logging_config import setup_logging  # noqa: E402
+from app.ui.app_icon import window_icon  # noqa: E402
 from app.ui.main_window import MainWindow  # noqa: E402
+
+APP_USER_MODEL_ID = "GIT.TechBench"
+
+
+def _windows_app_id() -> None:
+    """Stop Windows grouping this window under python.exe on the taskbar."""
+    if sys.platform != "win32":
+        return
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)
 
 
 def main() -> int:
+    _windows_app_id()
     setup_logging()
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setOrganizationName(ORGANIZATION_NAME)
+    icon = window_icon()
+    if not icon.isNull():
+        app.setWindowIcon(icon)
     app.setStyle("Fusion")
     app.setFont(QFont("Segoe UI", 10))
     qss_path = resource_root() / "assets" / "styles" / "theme.qss"
     if qss_path.exists():
         app.setStyleSheet(qss_path.read_text(encoding="utf-8"))
     window = MainWindow()
+    if not icon.isNull():
+        window.setWindowIcon(icon)
     window.show()
     return app.exec()
 

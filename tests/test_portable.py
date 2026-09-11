@@ -20,6 +20,7 @@ class PortablePathTests(unittest.TestCase):
         self.assertEqual(resource_root(), root)
         self.assertTrue((config_dir() / "app_config.json").exists())
         self.assertTrue((config_dir() / "recommendation_rules.json").exists())
+        self.assertTrue((resource_root() / "assets" / "icons" / "techbench.ico").is_file())
 
     def test_frozen_uses_exe_dir(self) -> None:
         original_exe = sys.executable

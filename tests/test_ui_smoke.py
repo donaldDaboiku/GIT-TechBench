@@ -37,6 +37,12 @@ class UiSmokeTests(unittest.TestCase):
         self.assertIn(family, sidebar.collapse_btn.styleSheet())
         sidebar.close()
 
+    def test_window_icon_is_not_empty(self) -> None:
+        from app.ui.app_icon import window_icon
+
+        icon = window_icon()
+        self.assertFalse(icon.isNull())
+
     def test_window_and_nav(self) -> None:
         window = MainWindow()
         self.assertGreaterEqual(len(window.pages), len(NAV_ITEMS))

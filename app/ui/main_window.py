@@ -13,6 +13,7 @@ from app.core.system_info import SystemInfo
 from app.models.diagnostic_result import DiagnosticResult
 from app.services.database_service import DatabaseService
 from app.services.report_service import ReportService, build_session_record
+from app.ui.app_icon import window_icon
 from app.ui.components.sidebar import Sidebar
 from app.ui.dashboard import DashboardPage
 from app.ui.nav import NAV_ITEMS
@@ -47,6 +48,9 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle(f"{APP_NAME} — {APP_TAGLINE}")
+        icon = window_icon()
+        if not icon.isNull():
+            self.setWindowIcon(icon)
         self.resize(1280, 820)
         self.setMinimumSize(960, 640)
         self._worker: SystemInfoWorker | None = None

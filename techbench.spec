@@ -7,6 +7,7 @@ datas = [
     ("config/app_config.json", "config"),
     ("config/recommendation_rules.json", "config"),
     ("assets/styles/theme.qss", "assets/styles"),
+    ("assets/icons/techbench.ico", "assets/icons"),
 ]
 binaries = []
 hiddenimports = [
@@ -63,6 +64,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon="assets/icons/techbench.ico",
 )
 coll = COLLECT(
     exe,
